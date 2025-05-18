@@ -1,8 +1,16 @@
+import 'package:book_tracker/fetch_data.dart';
+import 'package:book_tracker/screens/homepage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final tempDir = await getTemporaryDirectory();
   runApp(ProviderScope(
+    overrides: [
+      tempDirProvider.overrideWithValue(AsyncValue.data(tempDir))
+    ],
     child: const MyApp()
   ));
 }
@@ -33,7 +41,7 @@ class MyApp extends ConsumerWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: Text("placeholder")
+      home: HomeScreen()
     );
   }
 }
