@@ -59,8 +59,10 @@ Future<void> storeResponse({required String response, required WidgetRef ref}) a
   await newDir.create(recursive: false);
   // Next, map out the "docs" (books) portion of the response and split it into chunks (max 12 entries per)
   final Map<String, dynamic> json = jsonDecode(response);
-  final docs = json['docs'];
-  final chunkedDocs = chunkList(list: docs.toList(), maxEntries: 12);
+  final docs = json['docs'] as List<dynamic>;
+  // must make "s surrounding the keys and values explicit to be parsed as JSON later.
+  final edited = docs.map((book) => book.map((key, value) => MapEntry('\"$key\"', '\"$value\"')));
+  final chunkedDocs = chunkList(list: edited.toList(), maxEntries: 12);
   // Next, write the chunks to disk
   for (int i = 0; i < chunkedDocs.length; i++) {
     final chunk = chunkedDocs[i];
@@ -73,7 +75,8 @@ Future<void> storeResponse({required String response, required WidgetRef ref}) a
 // Make tempDir a global variable via a provider so that this doesn't have to be async and it can be called by the parser factory.
 Future<String> readChunk({required int chunk, required WidgetRef ref})  {
   final tempDir = ref.watch(tempDirProvider).value;
-  final chunkFile = File("${tempDir!.path}/chunk_$chunk.json");
+  print(tempDir!.path);
+  final chunkFile = File("${tempDir!.path}/latestResponse/chunk_$chunk.json");
   return chunkFile.readAsString();
 }
 

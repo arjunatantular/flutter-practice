@@ -19,7 +19,7 @@ factory BookData.fromJson(Map<String, dynamic> json) {
   final String? key = json['cover_edition_key'];
   return BookData(
       title: json['title'],
-      authorName: json['author_name'],
+      authorName: json['author_name'][0], // usually comes in a list
       publishDate: json['publish_year'][0],
       coverImageUrl: key == null
           ? null
