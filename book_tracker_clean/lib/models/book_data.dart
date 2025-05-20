@@ -13,14 +13,14 @@ class BookData {
     required this.coverImageUrl
   });
 
-factory BookData.fromJson(Map<String, dynamic> json) {
+factory BookData.fromJson(Map<String?, String?> json) {
   // To fetch image: https://covers.openlibrary.org/b/$key/$value-$size.jpg
   // (Small, Medium, or Large)
   final String? key = json['cover_edition_key'];
   return BookData(
       title: json['title'],
-      authorName: json['author_name'][0], // usually comes in a list
-      publishDate: json['publish_year'][0],
+      authorName: json['author_name']?[0], // usually comes in a list
+      publishDate: json['publish_year']?[0],
       coverImageUrl: key == null
           ? null
           : "https://covers.openlibrary.org/b/olid/$key-M.jpg"

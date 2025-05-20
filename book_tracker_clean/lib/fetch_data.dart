@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'dart:isolate';
+import 'package:book_tracker/models/book_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -19,6 +22,8 @@ TempResponseDirectory
 
  */
 
+// used so that images can be found from image url by gridview builder
+final urlToFilePathLookup = StateProvider<Map<String?, String?>>((ref) => {});
 final tempDirProvider = FutureProvider<Directory>((ref) async => await getTemporaryDirectory());
 // Should send a request to the server for the query and the page, and return the response body.
 // (There will be some duplicate listings of works (ie multiple Harry Potter sorcerer's stone)
@@ -73,14 +78,69 @@ Future<void> storeResponse({required String response, required WidgetRef ref}) a
 
 
 // Make tempDir a global variable via a provider so that this doesn't have to be async and it can be called by the parser factory.
-Future<String> readChunk({required int chunk, required WidgetRef ref})  {
+Future<List<Map<String, String?>>> getChunkJson({required int chunk, required WidgetRef ref}) async {
   final tempDir = ref.watch(tempDirProvider).value;
   print(tempDir!.path);
   final chunkFile = File("${tempDir!.path}/latestResponse/chunk_$chunk.json");
-  return chunkFile.readAsString();
+  final jsonText = await chunkFile.readAsString();
+  final jsonRaw = jsonDecode(jsonText) as List<dynamic>;
+  final json = jsonRaw.cast<Map<String, String?>>();
+  return json;
 }
 
 // TODO: Be able to pass in the filters data (author name, publication date, work name, etc.) and return a string for the query to pass into the sendRequest function.
 String filterDataToQuery() {
   return "";
 }
+
+// TODO: This is here temporarily. will be adapted into one buffer class later
+// Isolates are definitely overkill here but good practice using them:
+Future<List<BookData>> parseChunk(int number, WidgetRef ref) async {
+  final rawList = await getChunkJson(chunk: 1, ref: ref);
+  final bookList = rawList.map((json) => BookData.fromJson(json)).toList();
+  // clear any previous data
+  ref.read(urlToFilePathLookup.notifier).state.clear();
+  // initialize lookup table
+  for (var book in bookList) {
+    ref.read(urlToFilePathLookup.notifier)
+        .state[book.coverImageUrl] = null;
+  }
+  // begin isolate to begin downloading files
+  final newFilepaths = Isolate.run(() {
+    return downloadImages(
+        bookList.map((book) => book.coverImageUrl).toList(),
+        ref.watch(tempDirProvider).value);
+  });
+  // update lookup table
+  return bookList;
+}
+
+// TODO: Figure out the correct types here. Pretty sure it should be String? String?
+Future<Map<String?, String?>> downloadImages(List<String?> urlList, Directory? tempDir) async {
+  // filepath (the value) will be null if there was an error trying to get it.
+  // url : filepath of downloaded image
+  final Map<String, String?> temp = {};
+  // before you begin, create / clear the image directory:
+  final newDir = Directory("${tempDir!.path}/coverImages");
+  await newDir.create(recursive: false);
+  for (var url in urlList) {
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) { // success
+      // Create new unique file, write image bytes:
+      // example: 'https://covers.openlibrary.org/a/olid/OL23919A-M.jpg'
+      final imgCode = url.split("olid/")[1];
+      final file = File("${newDir.path}/$imgCode");
+      await file.writeAsBytes(response.bodyBytes);
+      // update temp map
+      temp[url] = "${newDir.path}/$imgCode";
+    } else { // failure
+      // update temp map
+      temp[url] = null;
+    }
+  }
+  return temp;
+}
+
+
+
+

@@ -23,13 +23,4 @@ class HomeScreen extends ConsumerWidget {
 
 void myFunc(WidgetRef ref) async {
   print("Beginning function");
-  await fetchBooks(query: "title: harry potter", page: "1", ref: ref);
-  // list of book json objects (List<Map<String, String>>
-  final List<dynamic> fileJson = jsonDecode(await readChunk(chunk: 2, ref: ref));
-  final chunk1 = fileJson
-      .map((entry) => Map<String, String>.from(entry as Map));
-  for (final entry in chunk1) {
-    final object = BookData.fromJson(entry);
-    print("${object.title} image: ${object.coverImageUrl}");
-  }
   }
