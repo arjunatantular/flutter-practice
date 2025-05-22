@@ -23,4 +23,7 @@ class HomeScreen extends ConsumerWidget {
 
 void myFunc(WidgetRef ref) async {
   print("Beginning function");
+  await parseChunk(1, ref);
+  print(ref.watch(urlToFilePathLookup).values.toList().toString());
+
   }
