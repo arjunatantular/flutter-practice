@@ -1,7 +1,8 @@
 import 'dart:convert';
 
-import 'package:book_tracker/fetch_data.dart';
+import 'package:book_tracker/parse_data.dart';
 import 'package:book_tracker/models/book_data.dart';
+import 'package:book_tracker/parse_data.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,6 +12,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
+      // TODO: Implement appBar appBar: {},
       body: SizedBox.expand(
         child: Align(
           alignment: Alignment.center,
@@ -24,6 +26,6 @@ class HomeScreen extends ConsumerWidget {
 void myFunc(WidgetRef ref) async {
   print("Beginning function");
   await parseChunk(1, ref);
-  print(ref.watch(urlToFilePathLookup).values.toList().toString());
-
+  print("Done");
   }
+

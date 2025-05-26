@@ -1,4 +1,5 @@
 import 'package:book_tracker/fetch_data.dart';
+import 'package:book_tracker/screens/gallery.dart';
 import 'package:book_tracker/screens/homepage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class MyApp extends ConsumerWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: HomeScreen()
+      home: Gallery()
     );
   }
 }
